@@ -6,12 +6,20 @@
         <ul id="movies"></ul>
         <script>
             (async () => {
-                let results = await fetch("/.netlify/functions/quali_app").then(response => response.json());
-                results.forEach(result => {
-                    const listItem = document.createElement("li");
-                    listItem.innerText = result.title;
-                    document.getElementById("movies").appendChild(listItem);
-                });
+                try {
+                    let response = await fetch("/.netlify/functions/quali_app");
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    let results = await response.json();
+                    results.forEach(result => {
+                        const listItem = document.createElement("li");
+                        listItem.innerText = result.title;
+                        document.getElementById("movies").appendChild(listItem);
+                    });
+                } catch (error) {
+                    console.error('Error:', error);
+                }
             })();
         </script>
     </body>
