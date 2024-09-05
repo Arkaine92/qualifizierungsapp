@@ -33,11 +33,16 @@
                     } else {
                         document.getElementById('greeting').innerText = `Hello, ${data.fullName}!`;
                         document.getElementById('user-info').innerHTML = `<p>Your key is: ${data.key}</p>`;
+                        
+                        // Generiere Buttons für die Companies
                         const companiesList = document.getElementById('companies-list');
                         data.companies.forEach(company => {
                             const button = document.createElement('button');
                             button.className = 'list-group-item list-group-item-action';
-                            button.innerText = `Company ID: ${company}`;
+                            button.innerText = company.name;
+                            button.style.backgroundColor = company.backgroundcolor;
+                            button.style.color = company.fontcolor;
+                            button.style.border = `2px solid ${company.highlightcolor}`;
                             companiesList.appendChild(button);
                         });
                     }

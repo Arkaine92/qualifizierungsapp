@@ -6,13 +6,14 @@ const clientPromise = mongoClient.connect();
 const handler = async (event) => {
     try {
         const database = (await clientPromise).db('qualificationapp');
-        const collection = database.collection('app_users');
+        const userCollection = database.collection('app_users');
+        const companyCollection = database.collection('companies');
 
         // URL-Parameter auslesen
         const key = event.queryStringParameters.key;
 
         // Suche nach dem entsprechenden Benutzer anhand des Keys
-        const user = await collection.findOne({ key: key });
+        const user = await userCollection.findOne({ key: key });
 
         if (!user) {
             return {
@@ -21,12 +22,23 @@ const handler = async (event) => {
             };
         }
 
+        // Hole alle Details zu den companies des Benutzers
+        const companyDetails = await companyCollection
+            .find({ company_id: { $in: user.companies.map(c => parseInt(c)) } })
+            .toArray();
+
+        // Response mit Benutzerinformationen und den Company-Details
         return {
             statusCode: 200,
             body: JSON.stringify({
                 fullName: user['full name'],
                 key: user.key,
-                companies: user.companies
+                companies: companyDetails.map(company => ({
+                    name: company.name,
+                    fontcolor: company.fontcolor,
+                    backgroundcolor: company.backgroundcolor,
+                    highlightcolor: company.highlightcolor
+                }))
             }),
         };
     } catch (error) {
