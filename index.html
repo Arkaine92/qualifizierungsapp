@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <title>Qualification App</title>
     <style>
         /* Buttons mit 4:3 Seitenverhältnis */
@@ -41,11 +42,6 @@
                 font-size: 3vw; /* Größere Schrift für kleine Bildschirme */
             }
         }
-
-        /* Textarea nicht vergrößerbar machen */
-        .form-textarea {
-            resize: none;
-        }
     </style>
 </head>
 <body>
@@ -79,10 +75,22 @@
             <!-- Submit Button -->
             <button class="btn btn-primary" id="submit-task" disabled>Tätigkeit speichern</button>
         </div>
+
+        <!-- Exportbereich für Firmen -->
+        <div class="mt-5">
+            <h2>Export Bereich</h2>
+            <p>Wählen Sie die Firmen aus, für die Sie einen Export wünschen:</p>
+            <div id="export-companies" class="mb-3">
+                <!-- Hier werden die Firmen mit Checkboxes eingefügt -->
+            </div>
+            <!-- Export Button -->
+            <button class="btn btn-success" id="export-pdf" disabled>PDF exportieren</button>
+        </div>
     </div>
 
     <script>
         let selectedCompany = null;
+        let companiesForExport = [];
 
         // Funktion zum Auslesen der URL-Parameter
         function getQueryParam(param) {
@@ -106,6 +114,7 @@
                         
                         // Generiere Buttons für die Companies
                         const companiesList = document.getElementById('companies-list');
+                        const exportCompaniesDiv = document.getElementById('export-companies');
                         data.companies.forEach(company => {
                             const buttonWrapper = document.createElement('div');
                             buttonWrapper.className = 'col-3 mb-2'; // Bootstrap: 4 Buttons pro Reihe (12/3 = 4 Spalten)
@@ -131,6 +140,33 @@
                             // Füge den Button in das Wrapper-Div ein
                             buttonWrapper.appendChild(button);
                             companiesList.appendChild(buttonWrapper);
+
+                            // Checkboxes für Exportbereich erstellen
+                            const checkboxWrapper = document.createElement('div');
+                            checkboxWrapper.className = 'form-check';
+
+                            const checkbox = document.createElement('input');
+                            checkbox.type = 'checkbox';
+                            checkbox.className = 'form-check-input';
+                            checkbox.id = `export-company-${company.name}`;
+                            checkbox.value = company.name;
+                            checkbox.onchange = (e) => {
+                                if (e.target.checked) {
+                                    companiesForExport.push(company.name);
+                                } else {
+                                    companiesForExport = companiesForExport.filter(c => c !== company.name);
+                                }
+                                document.getElementById('export-pdf').disabled = companiesForExport.length === 0;
+                            };
+
+                            const label = document.createElement('label');
+                            label.className = 'form-check-label';
+                            label.htmlFor = `export-company-${company.name}`;
+                            label.innerText = company.name;
+
+                            checkboxWrapper.appendChild(checkbox);
+                            checkboxWrapper.appendChild(label);
+                            exportCompaniesDiv.appendChild(checkboxWrapper);
                         });
                     }
                 })
@@ -179,6 +215,45 @@
                 console.error('Error:', error);
                 alert('Fehler beim Speichern der Tätigkeit.');
             });
+        });
+
+        // Funktion zum Exportieren der PDF
+        document.getElementById('export-pdf').addEventListener('click', () => {
+            // Holen der time_entries aus der Datenbank basierend auf dem Key und den ausgewählten Firmen
+            fetch(`/.netlify/functions/export_entries?key=${key}&companies=${companiesForExport.join(',')}`)
+                .then(response => response.json())
+                .then(entries => {
+                    // Generiere PDF mit den time_entries
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF();
+
+                    // Zusammenfassung der Arbeitszeit
+                    let companyTimeSummary = {};
+                    entries.forEach(entry => {
+                        if (!companyTimeSummary[entry.company]) {
+                            companyTimeSummary[entry.company] = 0;
+                        }
+                        companyTimeSummary[entry.company] += parseInt(entry.time);
+                    });
+
+                    let summaryText = "Zusammenfassung der Arbeitszeit:\n";
+                    Object.keys(companyTimeSummary).forEach(company => {
+                        summaryText += `${company}: ${companyTimeSummary[company]} Minuten\n`;
+                    });
+
+                    doc.text(summaryText, 10, 10);
+
+                    // Tabelle mit den Einträgen
+                    doc.autoTable({
+                        head: [['Firma', 'Tätigkeit', 'Beschreibung', 'Dauer']],
+                        body: entries.map(entry => [entry.company, entry.task, entry.description, entry.time])
+                    });
+
+                    doc.save('export.pdf');
+                })
+                .catch(error => {
+                    console.error('Error exporting PDF:', error);
+                });
         });
     </script>
 </body>
