@@ -27,12 +27,19 @@
             justify-content: center;
             align-items: center;
             text-align: center;
-            font-size: 1.2rem;
+            font-size: 2vw; /* Responsive Schriftgröße basierend auf der Viewport-Breite */
             font-weight: bold;
             border-radius: 5px;
             word-wrap: break-word;
             word-break: break-word;
             overflow-wrap: break-word; /* Erzwingt den Zeilenumbruch für lange Wörter */
+        }
+
+        /* Anpassung der Schriftgröße für kleinere Bildschirme */
+        @media (max-width: 768px) {
+            .company-button-content {
+                font-size: 4vw; /* Größere Schrift für kleine Bildschirme */
+            }
         }
     </style>
 </head>
