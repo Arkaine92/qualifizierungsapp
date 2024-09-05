@@ -76,10 +76,14 @@
                 <label for="description" class="form-label">Beschreibung der Tätigkeit</label>
                 <textarea class="form-control form-textarea" id="description" rows="4" placeholder="Beschreibung der Tätigkeit"></textarea>
             </div>
+            <!-- Submit Button -->
+            <button class="btn btn-primary" id="submit-task" disabled>Tätigkeit speichern</button>
         </div>
     </div>
 
     <script>
+        let selectedCompany = null;
+
         // Funktion zum Auslesen der URL-Parameter
         function getQueryParam(param) {
             const urlParams = new URLSearchParams(window.location.search);
@@ -108,6 +112,11 @@
 
                             const button = document.createElement('button');
                             button.className = 'company-button'; // Styling für 4:3-Buttons
+                            button.onclick = () => {
+                                selectedCompany = company;
+                                document.getElementById('submit-task').disabled = false; // Enable the submit button after selecting a company
+                                alert(`Company ${company.name} selected`);
+                            };
 
                             // Inhalt des Buttons
                             const buttonContent = document.createElement('div');
@@ -132,6 +141,45 @@
         } else {
             document.getElementById('greeting').innerText = 'No key provided in URL.';
         }
+
+        // Funktion zum Senden der Formulardaten
+        document.getElementById('submit-task').addEventListener('click', () => {
+            const task = document.getElementById('task').value;
+            const time = document.getElementById('time').value;
+            const description = document.getElementById('description').value;
+
+            if (!selectedCompany) {
+                alert('Bitte wählen Sie eine Firma aus.');
+                return;
+            }
+
+            // Send the data to the server
+            fetch('/.netlify/functions/save_task', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    key: key,
+                    company: selectedCompany, // Send selected company
+                    task: task,
+                    time: time,
+                    description: description
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Tätigkeit erfolgreich gespeichert!');
+                } else {
+                    alert('Fehler beim Speichern der Tätigkeit.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Fehler beim Speichern der Tätigkeit.');
+            });
+        });
     </script>
 </body>
 </html>
