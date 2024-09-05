@@ -5,6 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <title>Qualification App</title>
+    <style>
+        /* Buttons mit 4:3 Seitenverhältnis */
+        .company-button {
+            width: 100%; /* Volle Breite der Spalte */
+            padding-top: 75%; /* Höhe auf 75% der Breite setzen für 4:3-Verhältnis */
+            position: relative;
+            background-color: transparent;
+            border: none;
+            outline: none;
+        }
+
+        /* Zentrierter Inhalt und Styling */
+        .company-button-content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 5px;
+        }
+    </style>
 </head>
 <body>
     <div class="container mt-5">
@@ -43,12 +70,18 @@
                             buttonWrapper.className = 'col-3 mb-4'; // Bootstrap: 4 Buttons pro Reihe (12/3 = 4 Spalten)
 
                             const button = document.createElement('button');
-                            button.className = 'btn btn-block'; // Volle Breite des Eltern-Divs
-                            button.innerText = company.name;
-                            button.style.backgroundColor = company.backgroundcolor;
-                            button.style.color = company.fontcolor;
-                            button.style.border = `2px solid ${company.highlightcolor}`;
+                            button.className = 'company-button'; // Styling für 4:3-Buttons
 
+                            // Inhalt des Buttons
+                            const buttonContent = document.createElement('div');
+                            buttonContent.className = 'company-button-content';
+                            buttonContent.innerText = company.name;
+                            buttonContent.style.backgroundColor = company.backgroundcolor;
+                            buttonContent.style.color = company.fontcolor;
+                            buttonContent.style.border = `2px solid ${company.highlightcolor}`;
+
+                            // Füge den Button-Inhalt in den Button ein
+                            button.appendChild(buttonContent);
                             // Füge den Button in das Wrapper-Div ein
                             buttonWrapper.appendChild(button);
                             companiesList.appendChild(buttonWrapper);
