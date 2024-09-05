@@ -10,7 +10,9 @@
     <div class="container mt-5">
         <h1 id="greeting">Qualification App</h1>
         <div id="user-info" class="mt-4"></div>
-        <div id="companies-list" class="list-group mt-4"></div>
+        
+        <!-- Row für die Buttons -->
+        <div id="companies-list" class="row mt-4"></div>
     </div>
 
     <script>
@@ -37,13 +39,19 @@
                         // Generiere Buttons für die Companies
                         const companiesList = document.getElementById('companies-list');
                         data.companies.forEach(company => {
+                            const buttonWrapper = document.createElement('div');
+                            buttonWrapper.className = 'col-3 mb-4'; // Bootstrap: 4 Buttons pro Reihe (12/3 = 4 Spalten)
+
                             const button = document.createElement('button');
-                            button.className = 'list-group-item list-group-item-action';
+                            button.className = 'btn btn-block'; // Volle Breite des Eltern-Divs
                             button.innerText = company.name;
                             button.style.backgroundColor = company.backgroundcolor;
                             button.style.color = company.fontcolor;
                             button.style.border = `2px solid ${company.highlightcolor}`;
-                            companiesList.appendChild(button);
+
+                            // Füge den Button in das Wrapper-Div ein
+                            buttonWrapper.appendChild(button);
+                            companiesList.appendChild(buttonWrapper);
                         });
                     }
                 })
