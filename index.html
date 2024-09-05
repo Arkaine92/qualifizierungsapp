@@ -9,7 +9,7 @@
         /* Buttons mit 4:3 Seitenverhältnis */
         .company-button {
             width: 100%; /* Volle Breite der Spalte */
-            padding-top: 100%; /* Höhe auf 75% der Breite setzen für 4:3-Verhältnis */
+            padding-top: 100%; /* Höhe auf 100% der Breite setzen für quadratische Buttons */
             position: relative;
             background-color: transparent;
             border: none;
@@ -41,6 +41,11 @@
                 font-size: 3vw; /* Größere Schrift für kleine Bildschirme */
             }
         }
+
+        /* Textarea nicht vergrößerbar machen */
+        .form-textarea {
+            resize: none;
+        }
     </style>
 </head>
 <body>
@@ -50,6 +55,28 @@
         
         <!-- Row für die Buttons -->
         <div id="companies-list" class="row mt-4"></div>
+
+        <!-- Formular mit Tätigkeit, Zeit und Beschreibung -->
+        <div class="mt-5">
+            <h2>Neue Tätigkeit hinzufügen</h2>
+            <div class="row mb-3">
+                <!-- Tätigkeitsfeld -->
+                <div class="col-md-8">
+                    <label for="task" class="form-label">Tätigkeit</label>
+                    <input type="text" class="form-control" id="task" placeholder="Tätigkeit benennen">
+                </div>
+                <!-- Zeit in Minuten -->
+                <div class="col-md-4">
+                    <label for="time" class="form-label">Zeit (in Minuten)</label>
+                    <input type="number" class="form-control" id="time" placeholder="Zeit in Minuten">
+                </div>
+            </div>
+            <!-- Beschreibung der Tätigkeit -->
+            <div class="mb-3">
+                <label for="description" class="form-label">Beschreibung der Tätigkeit</label>
+                <textarea class="form-control form-textarea" id="description" rows="4" placeholder="Beschreibung der Tätigkeit"></textarea>
+            </div>
+        </div>
     </div>
 
     <script>
