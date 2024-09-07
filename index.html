@@ -79,16 +79,30 @@
             <button class="btn btn-primary" id="submit-task" disabled>Tätigkeit speichern</button>
         </div>
 
-        <!-- Exportbereich für Firmen -->
+        <!-- Exportbereich für Firmen und Datumsauswahl -->
         <div class="mt-5">
             <h2>Export Bereich</h2>
             <p>Wählen Sie die Firmen aus, für die Sie einen Export wünschen:</p>
             <div id="export-companies" class="mb-3">
                 <!-- Hier werden die Firmen mit Checkboxes eingefügt -->
             </div>
+
+            <!-- Datumsauswahl -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="export-from" class="form-label">Von</label>
+                    <input type="date" class="form-control" id="export-from">
+                </div>
+                <div class="col-md-6">
+                    <label for="export-to" class="form-label">Bis</label>
+                    <input type="date" class="form-control" id="export-to">
+                </div>
+            </div>
+
             <!-- Export Button -->
             <button class="btn btn-success" id="export-pdf" disabled>PDF exportieren</button>
         </div>
+
     </div>
 
     <script>
@@ -222,16 +236,24 @@
 
         // Funktion zum Exportieren der PDF
         document.getElementById('export-pdf').addEventListener('click', () => {
-            // Holen der time_entries aus der Datenbank basierend auf dem Key und den ausgewählten Firmen
-            fetch(`/.netlify/functions/export_entries?key=${key}&companies=${companiesForExport.join(',')}`)
+            const fromDate = document.getElementById('export-from').value;
+            const toDate = document.getElementById('export-to').value;
+
+            if (!fromDate || !toDate) {
+                alert('Bitte wählen Sie ein gültiges Von- und Bis-Datum aus.');
+                return;
+            }
+
+            // Holen der time_entries aus der Datenbank basierend auf dem Key, den ausgewählten Firmen und dem Datum
+            fetch(`/.netlify/functions/export_entries?key=${key}&companies=${companiesForExport.join(',')}&from=${fromDate}&to=${toDate}`)
                 .then(response => response.json())
                 .then(entries => {
-                    // Generiere PDF mit den time_entries
                     const { jsPDF } = window.jspdf;
                     const doc = new jsPDF();
 
-                    // Setze kleinere Schriftgröße für die Zusammenfassung
-                    doc.setFontSize(12);
+                    // Formatierung der Daten (von 'YYYY-MM-DD' zu 'DD.MM.YYYY')
+                    const formattedFromDate = new Date(fromDate).toLocaleDateString('de-DE');
+                    const formattedToDate = new Date(toDate).toLocaleDateString('de-DE');
 
                     // Zusammenfassung der Arbeitszeit
                     let companyTimeSummary = {};
@@ -242,22 +264,28 @@
                         companyTimeSummary[entry.company] += parseInt(entry.time);
                     });
 
-                    let summaryText = "Zusammenfassung der Arbeitszeit:\n";
+                    let summaryText = `Die Zusammenfassung der Arbeitszeit vom ${formattedFromDate} bis ${formattedToDate}:\n`;
                     Object.keys(companyTimeSummary).forEach(company => {
                         summaryText += `${company}: ${companyTimeSummary[company]} Minuten\n`;
                     });
 
-                    // Füge die Zusammenfassung mit etwas Abstand ein
+                    // Füge die Zusammenfassung ein
                     doc.text(summaryText, 10, 20);  // Setze den Y-Wert auf 20
 
                     // Setze einen Abstand zwischen Zusammenfassung und Tabelle
                     const tableStartY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : 40;
 
-                    // Tabelle mit den Einträgen
+                    // Tabelle mit den Einträgen inklusive Uhrzeit
                     doc.autoTable({
                         startY: tableStartY, // Starte die Tabelle unter der Zusammenfassung
-                        head: [['Firma', 'Tätigkeit', 'Beschreibung', 'Dauer']],
-                        body: entries.map(entry => [entry.company, entry.task, entry.description, entry.time]),
+                        head: [['Firma', 'Tätigkeit', 'Beschreibung', 'Dauer', 'Datum & Uhrzeit']],
+                        body: entries.map(entry => [
+                            entry.company,
+                            entry.task,
+                            entry.description,
+                            entry.time,
+                            new Date(entry.createdAt).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }) // Datum und Uhrzeit
+                        ]),
                         theme: 'striped',
                         headStyles: {
                             fillColor: [22, 160, 133] // Anpassung der Header-Farbe (optional)
@@ -267,7 +295,7 @@
                         }
                     });
 
-                    doc.save('export.pdf');
+                    doc.save(`export_${formattedFromDate}_bis_${formattedToDate}.pdf`);
                 })
                 .catch(error => {
                     console.error('Error exporting PDF:', error);

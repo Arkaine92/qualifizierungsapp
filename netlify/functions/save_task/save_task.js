@@ -16,7 +16,7 @@ const handler = async (event) => {
             task: data.task,
             time: data.time,
             description: data.description,
-            createdAt: new Date()
+            createdAt: new Date(), // Speichert das aktuelle Datum und Uhrzeit
         });
 
         return {
